@@ -1,0 +1,21 @@
+language: rust
+rust: beta
+after_success: |
+  [ $TRAVIS_BRANCH = master ] &&
+  [ $TRAVIS_PULL_REQUEST = false ] &&
+  cargo doc &&
+  echo "<meta http-equiv=refresh content=0;url=/gccjit.rs/gccjit/index.html>" > target/doc/index.html &&
+  sudo pip install ghp-import &&
+  ghp-import -n target/doc &&
+  git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
+before_install:
+  - mkdir jit
+  - cd jit && git clone git://gcc.gnu.org/git/gcc.git src
+install:
+  - mkdir jit/build
+  - cd jit/build && ../src/configure --enable-host-shared --enable-languages=jit --disable-bootstrap
+  - cd jit/build && make -j4
+  - cd jit/build && sudo make install
+script:
+  - cargo build --verbose
+  - cargo test --verbose
